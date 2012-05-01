@@ -65,13 +65,13 @@ main(int argc, char **argv)
 		case 'p':
 			service_pidfile = optarg;
 			if (service_pidfile[0] == '\0')
-				errx(EX_USAGE, "Null pidfile name");
+				errx(EX_USAGE, "null pidfile name");
 			break;
 		case 'T':
 			pidfile_timeout = strtol(optarg, &ep, 10);
 			if (pidfile_timeout <= 0 || *ep != '\0')
 				errx(EX_USAGE,
-				    "Invalid timeout value: %s", optarg);
+				    "invalid timeout value: %s", optarg);
 			break;
 		case 'v':
 			verbose++;
@@ -141,7 +141,7 @@ get_pid_from_file(const char *pidfile, long timeout)
 		pid = strtol(buf, &ep, 10);
 		if (pid <= 0 || !(*ep == '\0' || *ep == '\n' ||
 		    *ep == '\t' || *ep == ' '))
-			errx(EX_DATAERR, "Unsupported pidfile format");
+			errx(EX_DATAERR, "unsupported pidfile format");
 		if (verbose)
 			printf("Got pid %ld from %s\n", pid, pidfile);
 		if (fstat(fileno(fp), &st) != 0) {
@@ -154,13 +154,13 @@ get_pid_from_file(const char *pidfile, long timeout)
 		fclose(fp);
 		if (kill(pid, 0) != 0) {
 			if (errno != ESRCH)
-				err(EX_NOPERM, "Failed to check pid %ld", pid);
+				err(EX_NOPERM, "failed to check pid %ld", pid);
 			if (verbose)
 				printf("No process with pid %ld yet\n", pid);
 			goto retry;	/* Stale pidfile? */
 		}
 		if (time(NULL) - st.st_mtime >= timeout)
-			warnx("Pidfile %s might be stale", pidfile);
+			warnx("pidfile %s might be stale", pidfile);
 		break;
 retry:
 		/* Exponential backoff */
@@ -172,7 +172,7 @@ retry:
 		if (verbose > 1)
 			printf("Slept for %ld seconds so far\n", slept);
 		if (slept >= timeout)
-			errx(EX_UNAVAILABLE, "Timeout waiting for pidfile");
+			errx(EX_UNAVAILABLE, "timeout waiting for pidfile");
 		if (verbose)
 			printf("Retrying...\n");
 	}
