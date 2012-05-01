@@ -18,7 +18,7 @@
  *   should have separate rc.d scripts.
  */
 
-long pidfile_timeout;
+long pidfile_timeout = 60;	/* seconds */
 const char *service_name;
 const char *service_pidfile = NULL;
 
