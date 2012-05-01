@@ -1,6 +1,6 @@
 PROG=	supervise
 
-BINDIR?=	/usr/sbin
+BINDIR?=	/sbin
 
 WARNS?=	100
 
