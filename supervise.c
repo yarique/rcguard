@@ -189,8 +189,10 @@ get_pid_from_file(const char *pidfile, long timeout)
 				printf("No process with pid %ld yet\n", pid);
 			goto retry;	/* Stale pidfile? */
 		}
-		if (time(NULL) - st.st_mtime >= timeout)
-			warnx("pidfile %s might be stale", pidfile);
+		t = time(NULL) - st.st_mtime;
+		if (t >= timeout)
+			warnx("pidfile %s might be stale, age %ld seconds",
+			    pidfile, t);
 		break;
 retry:
 		/* Exponential backoff */
