@@ -1,7 +1,9 @@
 #include <sys/types.h>
 #include <sys/event.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <err.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sysexits.h>
@@ -18,11 +20,13 @@
  *   should have separate rc.d scripts.
  *
  * there is no stale pidfile left from an earlier instance
+ * of the service whose mtime is more recent than now less
+ * the timeout.
  *
  *   This is an obvious race condition: Should a stale pid
  *   file exist, it will be impossible to reliably tell if
  *   it came from the current or previous instance of the
- *   service.  XXX Can its time stamp be of any help here?
+ *   service.
  *
  * pid value is written atomically
  *
@@ -86,16 +90,29 @@ get_pid_from_file(const char *pidfile, long timeout)
 	long pid;	/* will be cast to pid_t on return */
 	long slept;
 	long t;
+	struct stat st;
 
 	for (pid = slept = 0;;) {
 		if ((fp = fopen(pidfile, "r")) == NULL)
-			goto retry;	/* Not created yet */
-		if (fgets(buf, sizeof(buf), fp) == NULL)
-			goto retry;	/* Not written yet */
+			goto retry;	/* Not created yet? */
+		if (fgets(buf, sizeof(buf), fp) == NULL) {
+			fclose(fp);
+			goto retry;	/* Not written yet? */
+		}
 		pid = strtol(buf, &ep, 10);
 		if (pid <= 0 || !(*ep == '\0' || *ep == '\n' ||
 		    *ep == '\t' || *ep == ' '))
 			errx(EX_DATAERR, "Unsupported pidfile format");
+		if (fstat(fileno(fp), &st) != 0) {
+			fclose(fp);
+			goto retry;	/* File system gone? */
+		}
+		fclose(fp);
+		if (time(NULL) - st.st_mtime >= pidfile_timeout ||
+		    kill(pid, 0) != 0) {
+			warnx("Found stale pidfile with pid %ld", pid);
+			goto retry;	/* Stale pidfile? */
+		}
 retry:
 		/* Exponential backoff */
 		t = slept ? slept : 1;
