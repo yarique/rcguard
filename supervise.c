@@ -9,6 +9,7 @@
 
 long pidfile_timeout;
 char *service_name;
+char *service_pidfile = NULL;
 
 void usage(void);
 
@@ -18,8 +19,13 @@ main(int argc, char **argv)
 	int c;
 	char *ep;
 
-	while ((c = getopt(argc, argv, "T:")) != -1) {
+	while ((c = getopt(argc, argv, "p:T:")) != -1) {
 		switch (c) {
+		case 'p':
+			service_pidfile = optarg;
+			if (service_pidfile[0] == '\0')
+				errx(EX_USAGE, "Null pidfile name");
+			break;
 		case 'T':
 			pidfile_timeout = strtol(optarg, &ep, 10);
 			if (pidfile_timeout <= 0 || *ep != '\0')
@@ -33,10 +39,13 @@ main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
+	/* Can't supervise a service w/o knowing its pidfile */
+	if (service_pidfile == NULL)
+		usage();
+
 	if (argc <= 0 || argc > 1)
 		usage();
 	service_name = *argv;
-	printf("%s %ld\n", service_name, pidfile_timeout);
 
 	return (0);
 }
@@ -44,5 +53,5 @@ main(int argc, char **argv)
 void
 usage(void)
 {
-	errx(EX_USAGE, "Usage: supervise [-T timeout] service");
+	errx(EX_USAGE, "Usage: supervise [-T timeout] -p pidfile service");
 }
