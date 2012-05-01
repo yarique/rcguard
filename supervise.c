@@ -8,14 +8,26 @@
 #include <unistd.h>
 
 /*
- * XXX Assumptions made and corners cut:
+ * Assumptions made and corners cut:
  *
- * rc.d script name == $name set in it
+ * XXX rc.d script name == $name set in it
  *
  *   This is mostly true except in several historical cases.
  *   One big exception is sendmail.  It effectively handles
  *   several services with different names.  Ideally, those
  *   should have separate rc.d scripts.
+ *
+ * there is no stale pidfile left from an earlier instance
+ *
+ *   This is an obvious race condition: Should a stale pid
+ *   file exist, it will be impossible to reliably tell if
+ *   it came from the current or previous instance of the
+ *   service.  XXX Can its time stamp be of any help here?
+ *
+ * pid value is written atomically
+ *
+ *   E.g., there should be no chance to read just "12" from
+ *   the pidfile if the pid value is 12345.
  */
 
 long pidfile_timeout = 60;	/* seconds */
@@ -68,21 +80,30 @@ main(int argc, char **argv)
 pid_t
 get_pid_from_file(const char *pidfile, long timeout)
 {
+	char buf[32];
+	char *ep;
 	FILE *fp;
+	long n;
 	long slept;
 	long t;
 	pid_t pid;
 
 	for (pid = slept = 0;;) {
 		if ((fp = fopen(pidfile, "r")) == NULL)
-			goto retry;
+			goto retry;	/* Not created yet */
+		if (fgets(buf, sizeof(buf), fp) == NULL)
+			goto retry;	/* Not written yet */
+		n = strtol(buf, &ep, 10);
+		if (n <= 0 || !(*ep == '\0' || *ep == '\n' ||
+		    *ep == '\t' || *ep == ' '))
+			errx(EX_DATAERR, "Unsupported pidfile format");
 retry:
 		/* Exponential backoff */
 		t = slept ? slept : 1;
 		sleep(t);
 		slept += t;
 		if (slept >= timeout)
-			break;
+			errx(EX_UNAVAILABLE, "Timeout waiting for pidfile");
 	}
 
 	return (pid);
