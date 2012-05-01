@@ -51,7 +51,7 @@ int verbose = 0;
 
 pid_t get_pid_from_file(const char *, long);
 void usage(void);
-int watch_pid(pid_t);
+long watch_pid(pid_t);
 
 int
 main(int argc, char **argv)
@@ -113,7 +113,8 @@ main(int argc, char **argv)
 
 	setproctitle("%s", service_name);
 
-	if (watch_pid(pid)) {
+	watch_pid(pid);
+	if (1) {	/* XXX cases where no restart needed? */
 		syslog(LOG_WARNING, "Restarting %s", service_name);
 		if (verbose)
 			printf("Restarting %s\n", service_name);
@@ -257,5 +258,5 @@ watch_pid(pid_t pid)
 	if (verbose)
 		printf("Got exit status %ld\n", (long)kev.data);
 
-	return (1);	/* request service be restarted */
+	return (kev.data);
 }
