@@ -150,9 +150,13 @@ watch_pid(pid_t pid)
 	int kq;
 	struct kevent kev;
 
-	if ((kq = kqueue()) == -1)
-		err(EX_OSERR, "kqueue");
+	if ((kq = kqueue()) == -1) {
+		syslog(LOG_ERR, "kqueue: %m");
+		exit(EX_OSERR);
+	}
+
 	EV_SET(&kev, pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, 0, NULL);
+
 	switch (kevent(kq, &kev, 1, &kev, 1, NULL)) {
 	case -1:
 		/* XXX special handling for EINTR? */
