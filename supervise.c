@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <err.h>
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,12 +22,14 @@
  *
  * there is no stale pidfile left from an earlier instance
  * of the service whose mtime is more recent than now less
- * the timeout.
+ * the pidfile timeout.
  *
  *   This is an obvious race condition: Should a stale pid
  *   file exist, it will be impossible to reliably tell if
  *   it came from the current or previous instance of the
- *   service.
+ *   service.  Hence the assumption.  Of course, it would
+ *   be better just to remove any stale pidfiles in rc.subr
+ *   before starting the service.
  *
  * pid value is written atomically
  *
@@ -78,6 +81,8 @@ main(int argc, char **argv)
 
 	pid = get_pid_from_file(service_pidfile, pidfile_timeout);
 
+	printf("%ld\n", (long)pid);
+
 	return (0);
 }
 
@@ -108,11 +113,14 @@ get_pid_from_file(const char *pidfile, long timeout)
 			goto retry;	/* File system gone? */
 		}
 		fclose(fp);
-		if (time(NULL) - st.st_mtime >= pidfile_timeout ||
-		    kill(pid, 0) != 0) {
-			warnx("Found stale pidfile with pid %ld", pid);
+		if (kill(pid, 0) != 0) {
+			if (errno != ESRCH)
+				err(EX_NOPERM, "Failed to check pid %ld", pid);
 			goto retry;	/* Stale pidfile? */
 		}
+		if (time(NULL) - st.st_mtime >= timeout)
+			warnx("Pidfile %s might be stale", pidfile);
+		break;
 retry:
 		/* Exponential backoff */
 		t = slept ? slept : 1;
