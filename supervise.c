@@ -221,7 +221,7 @@ watch_pid(pid_t pid)
 	}
 
 	if (verbose)
-		printf("Exit status %ld\n", (long)kev.data);
+		printf("Got exit status %ld\n", (long)kev.data);
 
 	return (0);
 }
