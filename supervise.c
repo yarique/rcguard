@@ -109,6 +109,8 @@ main(int argc, char **argv)
 
 	openlog("supervise", LOG_CONS | LOG_PID, LOG_DAEMON);
 
+	setproctitle("%s", service_name);
+
 	if (watch_pid(pid)) {
 		syslog(LOG_WARNING, "Restarting %s", service_name);
 		if (verbose)
