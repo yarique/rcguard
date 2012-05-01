@@ -224,7 +224,7 @@ usage(void)
 	exit(EX_USAGE);
 }
 
-int
+long
 watch_pid(pid_t pid)
 {
 	int kq;
