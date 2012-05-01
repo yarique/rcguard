@@ -7,7 +7,9 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <sysexits.h>
+#include <syslog.h>
 #include <unistd.h>
 
 /*
@@ -21,8 +23,8 @@
  *   should have separate rc.d scripts.
  *
  * there is no stale pidfile left from an earlier instance
- * of the service whose mtime is more recent than now less
- * the pidfile timeout.
+ * of the service with a pid value now reused by an unrelated
+ * process
  *
  *   This is an obvious race condition: Should a stale pid
  *   file exist, it will be impossible to reliably tell if
@@ -43,6 +45,7 @@ const char *service_pidfile = NULL;
 
 pid_t get_pid_from_file(const char *, long);
 void usage(void);
+int watch_pid(pid_t);
 
 int
 main(int argc, char **argv)
@@ -81,7 +84,9 @@ main(int argc, char **argv)
 
 	pid = get_pid_from_file(service_pidfile, pidfile_timeout);
 
-	printf("%ld\n", (long)pid);
+	/* daemon(0, 0); */
+
+	watch_pid(pid);
 
 	return (0);
 }
@@ -137,4 +142,34 @@ void
 usage(void)
 {
 	errx(EX_USAGE, "Usage: supervise [-T timeout] -p pidfile service");
+}
+
+int
+watch_pid(pid_t pid)
+{
+	int kq;
+	struct kevent kev;
+
+	if ((kq = kqueue()) == -1)
+		err(EX_OSERR, "kqueue");
+	EV_SET(&kev, pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, 0, NULL);
+	switch (kevent(kq, &kev, 1, &kev, 1, NULL)) {
+	case -1:
+		/* XXX special handling for EINTR? */
+		syslog(LOG_ERR, "kevent: %m");
+		exit(EX_OSERR);
+	case 0:
+		syslog(LOG_ERR, "kevent returned 0");
+		exit(EX_OSERR);
+	}
+
+	if ((long)kev.ident != (long)pid) {
+		syslog(LOG_ERR, "kevent fired on pid %ld not %ld",
+		    (long)kev.ident, (long)pid);
+		exit(EX_OSERR);
+	}
+
+	printf("exit status %ld\n", (long)kev.data);
+
+	return (0);
 }
