@@ -2,6 +2,7 @@
 #include <sys/event.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <err.h>
 #include <errno.h>
 #include <signal.h>
@@ -113,7 +114,16 @@ main(int argc, char **argv)
 
 	setproctitle("%s", service_name);
 
-	watch_pid(pid);
+	c = watch_pid(pid);
+	if (WIFSIGNALED(c))
+		syslog(LOG_WARNING, "%s terminated on signal %d",
+		    service_name, WTERMSIG(c));
+	else if (WIFEXITED(c))
+		syslog(LOG_WARNING, "%s exited with status %d",
+		    service_name, WEXITSTATUS(c));
+	else
+		syslog(LOG_WARNING, "%s ceased with unknown status %d",
+		    service_name, c);
 	if (1) {	/* XXX cases where no restart needed? */
 		syslog(LOG_WARNING, "Restarting %s", service_name);
 		if (verbose)
