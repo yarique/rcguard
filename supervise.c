@@ -93,6 +93,8 @@ main(int argc, char **argv)
 	if (argc <= 0 || argc > 1)
 		usage();
 	service_name = *argv;
+	if (service_name[0] == '\0')
+		errx(EX_USAGE, "null service name");
 
 	if (verbose) {
 		printf("Service: %s\n", service_name);
