@@ -19,16 +19,18 @@
  */
 
 long pidfile_timeout;
-char *service_name;
-char *service_pidfile = NULL;
+const char *service_name;
+const char *service_pidfile = NULL;
 
+pid_t get_pid_from_file(const char *, long);
 void usage(void);
 
 int
 main(int argc, char **argv)
 {
-	int c;
 	char *ep;
+	int c;
+	pid_t pid;
 
 	while ((c = getopt(argc, argv, "p:T:")) != -1) {
 		switch (c) {
@@ -58,7 +60,32 @@ main(int argc, char **argv)
 		usage();
 	service_name = *argv;
 
+	pid = get_pid_from_file(service_pidfile, pidfile_timeout);
+
 	return (0);
+}
+
+pid_t
+get_pid_from_file(const char *pidfile, long timeout)
+{
+	FILE *fp;
+	long slept;
+	long t;
+	pid_t pid;
+
+	for (pid = slept = 0;;) {
+		if ((fp = fopen(pidfile, "r")) == NULL)
+			goto retry;
+retry:
+		/* Exponential backoff */
+		t = slept ? slept : 1;
+		sleep(t);
+		slept += t;
+		if (slept >= timeout)
+			break;
+	}
+
+	return (pid);
 }
 
 void
