@@ -141,7 +141,8 @@ get_pid_from_file(const char *pidfile, long timeout)
 		pid = strtol(buf, &ep, 10);
 		if (pid <= 0 || !(*ep == '\0' || *ep == '\n' ||
 		    *ep == '\t' || *ep == ' '))
-			errx(EX_DATAERR, "unsupported pidfile format");
+			errx(EX_DATAERR,
+			    "no pid in pidfile %s", pidfile);
 		if (verbose)
 			printf("Got pid %ld from %s\n", pid, pidfile);
 		if (fstat(fileno(fp), &st) != 0) {
@@ -172,7 +173,8 @@ retry:
 		if (verbose > 1)
 			printf("Slept for %ld seconds so far\n", slept);
 		if (slept >= timeout)
-			errx(EX_UNAVAILABLE, "timeout waiting for pidfile");
+			errx(EX_UNAVAILABLE,
+			    "timeout waiting for pidfile %s", pidfile);
 		if (verbose)
 			printf("Retrying...\n");
 	}
@@ -205,7 +207,6 @@ watch_pid(pid_t pid)
 
 	switch (kevent(kq, &kev, 1, &kev, 1, NULL)) {
 	case -1:
-		/* XXX special handling for EINTR? */
 		syslog(LOG_ERR, "kevent: %m");
 		exit(EX_OSERR);
 	case 0:
@@ -219,7 +220,8 @@ watch_pid(pid_t pid)
 		exit(EX_OSERR);
 	}
 
-	printf("exit status %ld\n", (long)kev.data);
+	if (verbose)
+		printf("Exit status %ld\n", (long)kev.data);
 
 	return (0);
 }
