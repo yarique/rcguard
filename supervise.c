@@ -93,7 +93,7 @@ main(int argc, char **argv)
 
 	if (verbose) {
 		printf("Service: %s\n", service_name);
-		printf("Pidfile: %s\n", service_name);
+		printf("Pidfile: %s\n", service_pidfile);
 		printf("Timeout: %ld\n", pidfile_timeout);
 	}
 
