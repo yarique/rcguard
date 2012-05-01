@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include <sysexits.h>
 #include <syslog.h>
 #include <unistd.h>
@@ -39,9 +40,11 @@
  *   the pidfile if the pid value is 12345.
  */
 
+int foreground = 0;
 long pidfile_timeout = 60;	/* seconds */
 const char *service_name;
 const char *service_pidfile = NULL;
+int verbose = 0;
 
 pid_t get_pid_from_file(const char *, long);
 void usage(void);
@@ -54,8 +57,11 @@ main(int argc, char **argv)
 	int c;
 	pid_t pid;
 
-	while ((c = getopt(argc, argv, "p:T:")) != -1) {
+	while ((c = getopt(argc, argv, "fp:T:v")) != -1) {
 		switch (c) {
+		case 'f':
+			foreground = 1;
+			break;
 		case 'p':
 			service_pidfile = optarg;
 			if (service_pidfile[0] == '\0')
@@ -66,6 +72,9 @@ main(int argc, char **argv)
 			if (pidfile_timeout <= 0 || *ep != '\0')
 				errx(EX_USAGE,
 				    "Invalid timeout value: %s", optarg);
+			break;
+		case 'v':
+			verbose++;
 			break;
 		default:
 			usage();
@@ -82,9 +91,18 @@ main(int argc, char **argv)
 		usage();
 	service_name = *argv;
 
+	if (verbose) {
+		printf("Service: %s\n", service_name);
+		printf("Pidfile: %s\n", service_name);
+		printf("Timeout: %ld\n", pidfile_timeout);
+	}
+
 	pid = get_pid_from_file(service_pidfile, pidfile_timeout);
 
-	/* daemon(0, 0); */
+	if (!foreground) {
+		verbose = 0;	/* no stdio */
+		daemon(0, 0);
+	}
 
 	openlog("supervise", LOG_CONS | LOG_PID, LOG_DAEMON);
 
@@ -105,17 +123,31 @@ get_pid_from_file(const char *pidfile, long timeout)
 	struct stat st;
 
 	for (pid = slept = 0;;) {
-		if ((fp = fopen(pidfile, "r")) == NULL)
+		if ((fp = fopen(pidfile, "r")) == NULL) {
+			if (verbose)
+				printf("Failed to open %s: %s\n",
+				    pidfile, strerror(errno));
 			goto retry;	/* Not created yet? */
+		}
 		if (fgets(buf, sizeof(buf), fp) == NULL) {
+			if (verbose)
+				printf("Read nothing from %s\n", pidfile);
 			fclose(fp);
 			goto retry;	/* Not written yet? */
 		}
+		if (verbose > 1)
+			printf("Got 1st line from pidfile %s:\n%s\n",
+			    pidfile, buf);
 		pid = strtol(buf, &ep, 10);
 		if (pid <= 0 || !(*ep == '\0' || *ep == '\n' ||
 		    *ep == '\t' || *ep == ' '))
 			errx(EX_DATAERR, "Unsupported pidfile format");
+		if (verbose)
+			printf("Got pid %ld from %s\n", pid, pidfile);
 		if (fstat(fileno(fp), &st) != 0) {
+			if (verbose)
+				printf("Failed to stat %s: %s\n",
+				    pidfile, strerror(errno));
 			fclose(fp);
 			goto retry;	/* File system gone? */
 		}
@@ -123,6 +155,8 @@ get_pid_from_file(const char *pidfile, long timeout)
 		if (kill(pid, 0) != 0) {
 			if (errno != ESRCH)
 				err(EX_NOPERM, "Failed to check pid %ld", pid);
+			if (verbose)
+				printf("No process with pid %ld yet\n", pid);
 			goto retry;	/* Stale pidfile? */
 		}
 		if (time(NULL) - st.st_mtime >= timeout)
@@ -131,10 +165,16 @@ get_pid_from_file(const char *pidfile, long timeout)
 retry:
 		/* Exponential backoff */
 		t = slept ? slept : 1;
+		if (verbose)
+			printf("Sleeping for %ld seconds...\n", t);
 		sleep(t);
 		slept += t;
+		if (verbose > 1)
+			printf("Slept for %ld seconds so far\n", slept);
 		if (slept >= timeout)
 			errx(EX_UNAVAILABLE, "Timeout waiting for pidfile");
+		if (verbose)
+			printf("Retrying...\n");
 	}
 
 	return (pid);
@@ -143,7 +183,8 @@ retry:
 void
 usage(void)
 {
-	errx(EX_USAGE, "Usage: supervise [-T timeout] -p pidfile service");
+	errx(EX_USAGE,
+	    "Usage: supervise [-fv] [-T timeout] -p pidfile service");
 }
 
 int
@@ -158,6 +199,9 @@ watch_pid(pid_t pid)
 	}
 
 	EV_SET(&kev, pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, 0, NULL);
+
+	if (verbose)
+		printf("Waiting for kevent on pid %ld...\n", (long)pid);
 
 	switch (kevent(kq, &kev, 1, &kev, 1, NULL)) {
 	case -1:
