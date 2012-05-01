@@ -86,6 +86,8 @@ main(int argc, char **argv)
 
 	/* daemon(0, 0); */
 
+	openlog("supervise", LOG_CONS | LOG_PID, LOG_DAEMON);
+
 	watch_pid(pid);
 
 	return (0);
