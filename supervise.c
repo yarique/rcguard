@@ -7,6 +7,17 @@
 #include <sysexits.h>
 #include <unistd.h>
 
+/*
+ * XXX Assumptions made and corners cut:
+ *
+ * rc.d script name == $name set in it
+ *
+ *   This is mostly true except in several historical cases.
+ *   One big exception is sendmail.  It effectively handles
+ *   several services with different names.  Ideally, those
+ *   should have separate rc.d scripts.
+ */
+
 long pidfile_timeout;
 char *service_name;
 char *service_pidfile = NULL;
