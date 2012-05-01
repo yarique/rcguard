@@ -40,6 +40,9 @@
  *   the pidfile if the pid value is 12345.
  */
 
+#define PATH_SERVICE	"/usr/sbin/service"
+#define RCD_CMD		"restart"	/* rc.d command to restart service */
+
 int foreground = 0;
 long pidfile_timeout = 60;	/* seconds */
 const char *service_name;
@@ -106,9 +109,33 @@ main(int argc, char **argv)
 
 	openlog("supervise", LOG_CONS | LOG_PID, LOG_DAEMON);
 
-	watch_pid(pid);
+	if (watch_pid(pid)) {
+		syslog(LOG_WARNING, "Restarting %s", service_name);
+		if (verbose)
+			printf("Restarting %s\n", service_name);
+		if (service_name[0] == '/') {
+			if (verbose)
+				printf("Running '%s %s'\n",
+				    service_name, RCD_CMD);
+			c = execl(service_name, service_name, RCD_CMD,
+			    (char *)NULL);
+		} else {
+			if (verbose)
+				printf("Running '%s %s %s'\n",
+				    PATH_SERVICE, service_name, RCD_CMD);
+			c = execl(PATH_SERVICE, PATH_SERVICE,
+			    service_name, RCD_CMD, (char *)NULL);
+		}
+		if (c == -1)
+			syslog(LOG_ERR, "exec failed: %m");
+		else
+			syslog(LOG_ERR, "exec returned %d", c);
+		exit(EX_OSERR);
+	}
 
-	return (0);
+	exit(EX_OK);
+
+	return (0);	/* dummy */
 }
 
 pid_t
@@ -223,5 +250,5 @@ watch_pid(pid_t pid)
 	if (verbose)
 		printf("Got exit status %ld\n", (long)kev.data);
 
-	return (0);
+	return (1);	/* request service be restarted */
 }
