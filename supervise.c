@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 long pidfile_timeout;
+char *service_name;
 
 void usage(void);
 
@@ -34,10 +35,14 @@ main(int argc, char **argv)
 
 	if (argc <= 0 || argc > 1)
 		usage();
+	service_name = *argv;
+	printf("%s %ld\n", service_name, pidfile_timeout);
+
+	return (0);
 }
 
 void
-usage()
+usage(void)
 {
 	errx(EX_USAGE, "Usage: supervise [-T timeout] service");
 }
