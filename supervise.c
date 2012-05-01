@@ -214,8 +214,9 @@ retry:
 void
 usage(void)
 {
-	errx(EX_USAGE,
-	    "Usage: supervise [-fv] [-T timeout] -p pidfile service");
+	fprintf(stderr,
+	    "Usage: supervise [-fv] [-T timeout] -p pidfile service\n");
+	exit(EX_USAGE);
 }
 
 int
