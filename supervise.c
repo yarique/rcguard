@@ -83,18 +83,17 @@ get_pid_from_file(const char *pidfile, long timeout)
 	char buf[32];
 	char *ep;
 	FILE *fp;
-	long n;
+	long pid;	/* will be cast to pid_t on return */
 	long slept;
 	long t;
-	pid_t pid;
 
 	for (pid = slept = 0;;) {
 		if ((fp = fopen(pidfile, "r")) == NULL)
 			goto retry;	/* Not created yet */
 		if (fgets(buf, sizeof(buf), fp) == NULL)
 			goto retry;	/* Not written yet */
-		n = strtol(buf, &ep, 10);
-		if (n <= 0 || !(*ep == '\0' || *ep == '\n' ||
+		pid = strtol(buf, &ep, 10);
+		if (pid <= 0 || !(*ep == '\0' || *ep == '\n' ||
 		    *ep == '\t' || *ep == ' '))
 			errx(EX_DATAERR, "Unsupported pidfile format");
 retry:
