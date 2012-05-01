@@ -51,7 +51,7 @@ int verbose = 0;
 
 pid_t get_pid_from_file(const char *, long);
 void usage(void);
-long watch_pid(pid_t);
+int watch_pid(pid_t);
 
 int
 main(int argc, char **argv)
@@ -224,7 +224,7 @@ usage(void)
 	exit(EX_USAGE);
 }
 
-long
+int
 watch_pid(pid_t pid)
 {
 	int kq;
@@ -256,7 +256,7 @@ watch_pid(pid_t pid)
 	}
 
 	if (verbose)
-		printf("Got exit status %ld\n", (long)kev.data);
+		printf("Got exit status %d\n", (int)kev.data);
 
 	return (kev.data);
 }
