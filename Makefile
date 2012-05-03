@@ -1,5 +1,5 @@
-PROG=	supervise
-MAN=	supervise.8
+PROG=	rcguard
+MAN=	rcguard.8
 
 DPADD=  ${LIBUTIL}
 LDADD=  -lutil

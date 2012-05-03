@@ -50,8 +50,8 @@
  *   rc.d won't try to start a service if it's already running.
  */
 
-#define MY_NAME		"supervise"
-#define PIDFILE_SUFFIX	"supervised"
+#define MY_NAME		"rcguard"
+#define PIDFILE_SUFFIX	MY_NAME
 
 #define PATH_SERVICE	"/usr/sbin/service"
 

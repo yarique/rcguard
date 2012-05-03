@@ -28,8 +28,8 @@
 .Dt SUPERVISE 8
 .Os
 .Sh NAME
-.Nm supervise
-.Nd "supervise an rc.d service process"
+.Nm rcguard
+.Nd "guard an rc.d service process from failure"
 .Sh SYNOPSIS
 .Nm
 .Op Fl fv
@@ -52,7 +52,7 @@ It is intended for the internal use by the
 system.
 It can be enabled on an individual service by setting its
 respective
-.Va ${name}_supervise
+.Va ${name}_guard
 variable in
 .Xr rc.conf 5 ,
 which is an
@@ -74,7 +74,7 @@ needs to learn the PID of the watched process.
 Own PID file name of the
 .Nm
 instance is formed by appending a
-.Dq Li supervised
+.Dq Li rcguard
 suffix to
 .Ar pidfile .
 .It Fl s Ar sig_stop
