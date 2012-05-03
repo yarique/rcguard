@@ -151,7 +151,11 @@ it exited, it is assumed to have shut down cleanly and will
 not be restarted.
 This behavior can be adjusted with a
 .Fl s
-option to specify a single signal that also means a clean shutdown.
+option to specify a single signal also meaning a clean shutdown.
+This way a monitored service can be stopped by
+.Pa rc.d
+without having to communicate with its instance of
+.Nm .
 .Sh SEE ALSO
 .Xr rc.conf 5 ,
 .Xr rc 8 ,
