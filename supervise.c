@@ -51,12 +51,14 @@
 #define RCD_CMD		"restart"	/* rc.d command to restart service */
 
 int foreground = 0;
+struct pidfh *pfh = NULL;
 long pidfile_timeout = 60;	/* seconds */
 const char *service_name;
 const char *service_pidfile = NULL;
 int sig_stop = -1;		/* no signal means clean exit by default */
 int verbose = 0;
 
+void cleanup(void);
 pid_t get_pid_from_file(const char *, long);
 void usage(void);
 int str2sig(const char *);
@@ -71,7 +73,8 @@ main(int argc, char **argv)
 	int c;
 	int restart;
 	pid_t pid;
-	struct pidfh *pfh;
+
+	atexit(cleanup);
 
 	while ((c = getopt(argc, argv, "fp:s:T:v")) != -1) {
 		switch (c) {
@@ -196,10 +199,17 @@ main(int argc, char **argv)
 	} else
 		syslog(LOG_NOTICE, "%s stopped", p);
 
-	pidfile_remove(pfh);
 	exit(EX_OK);
 
 	return (0);	/* dummy */
+}
+
+void
+cleanup(void)
+{
+
+	if (pfh)
+		pidfile_remove(pfh);
 }
 
 pid_t
