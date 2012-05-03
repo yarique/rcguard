@@ -48,11 +48,11 @@
  */
 
 #define PATH_SERVICE	"/usr/sbin/service"
-#define RCD_CMD		"onerestart"	/* rc.d command to restart service */
 
 int foreground = 0;
 struct pidfh *pfh = NULL;
 long pidfile_timeout = 60;	/* seconds */
+const char *service_command;
 const char *service_name;
 const char *service_pidfile = NULL;
 int sig_stop = -1;		/* no signal means clean exit by default */
@@ -113,14 +113,18 @@ main(int argc, char **argv)
 	if (service_pidfile == NULL)
 		usage();
 
-	if (argc <= 0 || argc > 1)
+	if (argc != 2)
 		usage();
-	service_name = *argv;
+	service_name = argv[0];
+	service_command = argv[1];
 	if (service_name[0] == '\0')
 		errx(EX_USAGE, "null service name");
+	if (service_command[0] == '\0')
+		errx(EX_USAGE, "null service command");
 
 	if (verbose) {
 		printf("Service: %s\n", service_name);
+		printf("Command: %s\n", service_command);
 		printf("Pidfile: %s\n", service_pidfile);
 		printf("Signal: %d\n", sig_stop);
 		printf("Timeout: %ld\n", pidfile_timeout);
@@ -181,15 +185,16 @@ main(int argc, char **argv)
 		if (service_name[0] == '/') {
 			if (verbose)
 				printf("Running '%s %s'\n",
-				    service_name, RCD_CMD);
-			c = execl(service_name, service_name, RCD_CMD,
+				    service_name, service_command);
+			c = execl(service_name, service_name, service_command,
 			    (char *)NULL);
 		} else {
 			if (verbose)
 				printf("Running '%s %s %s'\n",
-				    PATH_SERVICE, service_name, RCD_CMD);
+				    PATH_SERVICE, service_name,
+				    service_command);
 			c = execl(PATH_SERVICE, PATH_SERVICE,
-			    service_name, RCD_CMD, (char *)NULL);
+			    service_name, service_command, (char *)NULL);
 		}
 		if (c == -1)
 			syslog(LOG_ERR, "exec failed: %m");
@@ -305,7 +310,7 @@ usage(void)
 {
 	fprintf(stderr,
 	    "Usage: supervise [-fv] [-s sig_stop] [-T timeout] " \
-	    "-p pidfile service\n");
+	    "-p pidfile service command\n");
 	exit(EX_USAGE);
 }
 
