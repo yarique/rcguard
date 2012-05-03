@@ -48,7 +48,7 @@
  */
 
 #define PATH_SERVICE	"/usr/sbin/service"
-#define RCD_CMD		"restart"	/* rc.d command to restart service */
+#define RCD_CMD		"onerestart"	/* rc.d command to restart service */
 
 int foreground = 0;
 struct pidfh *pfh = NULL;
