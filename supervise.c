@@ -163,7 +163,9 @@ main(int argc, char **argv)
 	pid = get_pid_from_file(service_pidfile, pidfile_timeout);
 
 	if (!foreground) {
-		verbose = 0;	/* no stdio */
+		if (verbose)
+			printf("Daemonizing, further messages in syslog\n");
+		verbose = 0;	/* no stdio after daemon() */
 		if (daemon(0, 0) == -1)
 			err(EX_OSERR, "Failed to daemonize");
 	}
