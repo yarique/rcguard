@@ -122,15 +122,15 @@ main(int argc, char **argv)
 	c = watch_pid(pid);
 	if (WIFSIGNALED(c))
 		syslog(LOG_WARNING, "%s terminated on signal %d",
-		    service_name, WTERMSIG(c));
+		    p, WTERMSIG(c));
 	else if (WIFEXITED(c))
 		syslog(LOG_WARNING, "%s exited with status %d",
-		    service_name, WEXITSTATUS(c));
+		    p, WEXITSTATUS(c));
 	else
 		syslog(LOG_WARNING, "%s ceased with unknown status %d",
-		    service_name, c);
+		    p, c);
 	if (1) {	/* XXX cases where no restart needed? */
-		syslog(LOG_WARNING, "Restarting %s", service_name);
+		syslog(LOG_WARNING, "Restarting %s", p);
 		if (verbose)
 			printf("Restarting %s\n", service_name);
 		if (service_name[0] == '/') {
