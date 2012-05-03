@@ -24,6 +24,9 @@
  *   One big exception is sendmail.  It effectively handles
  *   several services with different names.  Ideally, those
  *   should have separate rc.d scripts.
+ *   To work around exceptions, this utility accepts absolute
+ *   paths to rc.d scripts as well.  Now it's preferred way
+ *   to invoke it from rc.subr.
  *
  * there is no stale pidfile left from an earlier instance
  * of the service with a pid value now reused by an unrelated
