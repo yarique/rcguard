@@ -196,6 +196,19 @@ main(int argc, char **argv)
 		syslog(LOG_NOTICE, "Restarting %s", shortname);
 		if (verbose)
 			printf("Restarting %s\n", service_name);
+
+		/*
+		 * Although pidfile_open() sets O_CLOEXEC and so it could
+		 * be OK to leave our pidfile open here, the exec'ed script
+		 * will inherit our pid easily confusing programs that don't
+		 * try to lock the pidfile and only check pid existence.
+		 *
+		 * No race condition created here as the new instance(s)
+		 * will be locking the pidfile anyway.
+		 */
+		pidfile_remove(pfh);
+		pfh = NULL;		/* for cleanup() */
+
 		if (service_name[0] == '/') {
 			if (verbose)
 				printf("Running '%s %s'\n",
@@ -227,8 +240,10 @@ void
 cleanup(void)
 {
 
-	if (pfh)
+	if (pfh) {
 		pidfile_remove(pfh);
+		pfh = NULL;	/* in case there is another atexit() handler */
+	}
 }
 
 pid_t
