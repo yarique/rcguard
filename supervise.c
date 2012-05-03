@@ -39,6 +39,11 @@
  *
  *   E.g., there should be no chance to read just "12" from
  *   the pidfile if the pid value is 12345.
+ *
+ * no pidfile or other lock mechanism used here -- relying
+ * on the supervised process pidfile checked by rc.d
+ *
+ *   rc.d won't try to start a service if it's already running.
  */
 
 #define PATH_SERVICE	"/usr/sbin/service"
@@ -60,6 +65,7 @@ main(int argc, char **argv)
 	char *ep;
 	const char *p;
 	int c;
+	int restart;
 	pid_t pid;
 
 	while ((c = getopt(argc, argv, "fp:T:v")) != -1) {
@@ -120,16 +126,28 @@ main(int argc, char **argv)
 	setproctitle("%s", p);
 
 	c = watch_pid(pid);
-	if (WIFSIGNALED(c))
+	if (WIFSIGNALED(c)) {
 		syslog(LOG_WARNING, "%s terminated on signal %d",
 		    p, WTERMSIG(c));
-	else if (WIFEXITED(c))
+		switch (WTERMSIG(c)) {
+		case SIGTERM:
+			restart = 0;
+			break;
+		default:
+			restart = 1;
+			break;
+		}
+	} else if (WIFEXITED(c)) {
 		syslog(LOG_WARNING, "%s exited with status %d",
 		    p, WEXITSTATUS(c));
-	else
+		restart = 0;
+	} else {
 		syslog(LOG_WARNING, "%s ceased with unknown status %d",
 		    p, c);
-	if (1) {	/* XXX cases where no restart needed? */
+		restart = 1;
+	}
+
+	if (restart) {
 		syslog(LOG_WARNING, "Restarting %s", p);
 		if (verbose)
 			printf("Restarting %s\n", service_name);
@@ -151,7 +169,8 @@ main(int argc, char **argv)
 		else
 			syslog(LOG_ERR, "exec returned %d", c);
 		exit(EX_OSERR);
-	}
+	} else
+		syslog(LOG_INFO, "%s stopped", p);
 
 	exit(EX_OK);
 
