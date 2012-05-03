@@ -137,14 +137,7 @@ main(int argc, char **argv)
 	if (WIFSIGNALED(c)) {
 		syslog(LOG_NOTICE, "%s terminated on signal %d",
 		    p, WTERMSIG(c));
-		switch (WTERMSIG(c)) {
-		case SIGTERM:
-			restart = 0;
-			break;
-		default:
-			restart = 1;
-			break;
-		}
+		restart = WTERMSIG(c) != sig_stop;
 	} else if (WIFEXITED(c)) {
 		syslog(LOG_NOTICE, "%s exited with status %d",
 		    p, WEXITSTATUS(c));
