@@ -114,6 +114,7 @@ main(int argc, char **argv)
 	if (verbose) {
 		printf("Service: %s\n", service_name);
 		printf("Pidfile: %s\n", service_pidfile);
+		printf("Signal: %d\n", sig_stop);
 		printf("Timeout: %ld\n", pidfile_timeout);
 	}
 
@@ -263,7 +264,7 @@ str2sig(const char *s)
 	int i;
 
 	for (i = 0; i < NSIG; i++) {
-		if (strcmp(s, sys_signame[i]))
+		if (strcmp(s, sys_signame[i]) == 0)
 			return (i);
 	}
 
