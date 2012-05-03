@@ -1,4 +1,5 @@
 PROG=	supervise
+MAN=	supervise.8
 
 DPADD=  ${LIBUTIL}
 LDADD=  -lutil
@@ -6,7 +7,5 @@ LDADD=  -lutil
 BINDIR?=	/sbin
 
 WARNS?=	100
-
-NO_MAN=	yes
 
 .include <bsd.prog.mk>
