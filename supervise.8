@@ -1,4 +1,4 @@
-.\" Copyright (c) [year] [your name]
+.\" Copyright (c) 2012 Yar Tikhiy
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,134 +22,135 @@
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
 .\"
-.\" $FreeBSD: src/share/examples/mdoc/example.1,v 1.23.28.1 2011/09/23 00:51:37 kensmith Exp $
+.\" $FreeBSD$
 .\"
-.\" Note: The date here should be updated whenever a non-trivial
-.\" change is made to the manual page.
-.Dd December 8, 1999
-.Dt EXAMPLE 1
+.Dd May 4, 2012
+.Dt SUPERVISE 8
 .Os
 .Sh NAME
-.Nm example
-.Nd "example command manual page"
+.Nm supervise
+.Nd "supervise an rc.d service"
 .Sh SYNOPSIS
 .Nm
-.Op Fl abc
-.Op Fl d Ar argument
-.Ar file
+.Op Fl fv
+.Op Fl p Ar pidfile
+.Op Fl s Ar sig_stop
+.Op Fl T Ar timeout
+.Ar service
+.Ar command
 .Sh DESCRIPTION
-This is an example manual page for the
-.Nm
-command.
-It is intended that this example can be used as a template
-when writing a new manual page.
-.Pp
-The options are as follows:
-.Bl -tag -width ".Fl d Ar argument"
-.It Fl a
-Example optional
-.Fl a
-option.
-.It Fl b
-Example optional
-.Fl b
-option.
-.It Fl c
-Example optional
-.Fl c
-option.
-.It Fl d Ar argument
-Example optional
-.Fl d
-option with required argument
-.Ar argument .
-.It Ar file
-Required argument
-.Ar file .
-.El
-.Sh ENVIRONMENT
 The
 .Nm
-command ignores the
-.Ev EXAMPLE
-environment variable.
+auxiliary daemon can monitor an individual
+.Pa rc.d
+service such as a daemon and restart it, should it crash.
+The
+.Nm
+daemon is not to be started by the user:
+It is intended for the internal use by the
+.Pa rc.d
+system.
+It can be enabled on an individual service by setting its
+respective
+.Va ${name}_supervise
+variable in
+.Xr rc.conf 5 ,
+which is an
+.Xr rc.subr 8
+feature.
+.Pp
+The options and arguments are as follows:
+.Bl -tag -width ".Fl s Ar sig_stop"
+.It Fl f
+Run in foreground instead of daemonizing itself.
+Useful in combination with a
+.Fl v
+option.
+.It Fl p Ar pidfile
+The PID file of the service to monitor.
+This is a mandatory option because
+.Nm
+needs to learn the PID of the watched service.
+Own PID file name of the
+.Nm
+instance is based on
+.Ar pidfile .
+.It Fl s Ar sig_stop
+The signal used to shut the supervised service down,
+corresponding to the
+.Va sig_stop
+variable set by the
+.Pa rc.d
+script.
+If the service terminates on this signal, it will not be restarted.
+In the absence of any
+.Fl s
+option, termination on any signal will be interpreted as crash and
+the service will be restarted.
+.It Fl T Ar timeout
+The timeout to wait for the service PID file.
+Since there is no direct synchronization between
+.Nm
+and the service it monitors, the service can fully start and create
+its PID file well after
+.Nm
+was started.
+For this reason,
+.Nm
+will wait at least
+.Ar timeout
+seconds for a valid PID file to appear.
+The default timeout is 60 seconds.
+.It Fl v
+Print verbose progress messages.
+Useful in combination with a
+.Fl f
+option.
+.It Ar service
+The name of the service to monitor or the absolute path name
+of its
+.Pa rc.d
+script .
+If
+.Ar service
+is specified by its name,
+.Xr service 8
+will be used to control it.
+Note well that due to a
+.Xr service 8
+limitation,
+.Ar service 
+currently has to be the name of the
+.Pa rc.d
+script rather than that set inside it in the
+.Va name
+variable.
+Specifying
+.Ar service
+by its
+.Pa rc.d
+script full path name is unambiguous and free
+of this caveat.
+.It Ar command
+.El
 .Sh FILES
-.Bl -tag -width ".Pa /dev/null" -compact
-.It Pa /dev/null
-Example of a file in the
-.Sx FILES
-section.
+.Bl -tag -width ".Pa /usr/sbin/service" -compact
+.It Pa /usr/sbin/service
+Used to restart
+.Ar service
+if it is not an absolute path name.
 .El
-.Sh EXIT STATUS
-.Ex -std
-.Sh EXAMPLES
-The following is an example of a typical usage
-of the
-.Nm
-command:
-.Pp
-.Dl "example -abc -d xyzzy /dev/null"
-.Sh DIAGNOSTICS
-The command may fail for one of the following reasons:
-.Bl -diag
-.It "example error message"
-An example of an error message.
-.It "another example error message."
-Self explanatory.
-.El
-.Sh COMPATIBILITY
-The
-.Nm
-command has no known compatibility issues.
 .Sh SEE ALSO
-.Xr example 3 ,
-.Xr example 4 ,
-.Xr mdoc 7 ,
-.Xr example 9
-.Rs
-.%A "A. B. Author"
-.%T "Example RFC Title"
-.%O RFC0000
-.Re
-.Rs
-.%A "A. B. Author"
-.%B "Example Book Title"
-.%O ISBN-0-000-00000-0
-.Re
-.Rs
-.%A "A. B. Author"
-.%D "January 1997"
-.%J "Example Journal Name"
-.%T "Example Article Title"
-.Re
-.Sh STANDARDS
-If the command conforms to some standard, such as
-.St -p1003.2
-or
-.St -isoC ,
-it should be noted here.
+.Xr rc.conf 5 ,
+.Xr rc 8 ,
+.Xr rc.subr 8 ,
+.Xr service 8
 .Sh HISTORY
 The
 .Nm
-manual page example first appeared in
-.Fx 2.2 .
-.Pp
-Some other common
-.Sx HISTORY
-section examples are:
-.Pp
-The
-.Nm
-manual page example first appeared in
-.Bx 4.4 .
-.Pp
-The
-.Nm
-manual page example first appeared in
-.At v6 .
+manual page first appeared in
+.Fx 9.0 .
 .Sh AUTHORS
 This
 manual page was written by
-.An Mike Pritchard Aq mpp@FreeBSD.org .
-.Sh BUGS
-The actual code for this command is vaporware.
+.An Yar Tikhiy Aq yar@FreeBSD.org .
