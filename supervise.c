@@ -79,7 +79,7 @@ main(int argc, char **argv)
 
 	atexit(cleanup);
 
-	while ((c = getopt(argc, argv, "fp:s:T:v")) != -1) {
+	while ((c = getopt(argc, argv, "fp:s:t:v")) != -1) {
 		switch (c) {
 		case 'f':
 			foreground = 1;
@@ -96,7 +96,7 @@ main(int argc, char **argv)
 				errx(EX_USAGE,
 				    "invalid signal name %s", optarg);
 			break;
-		case 'T':
+		case 't':
 			pidfile_timeout = strtol(optarg, &ep, 10);
 			if (pidfile_timeout <= 0 || *ep != '\0')
 				errx(EX_USAGE,
@@ -340,7 +340,7 @@ void
 usage(void)
 {
 	fprintf(stderr,
-	    "Usage: supervise [-fv] [-s sig_stop] [-T timeout] " \
+	    "Usage: supervise [-fv] [-s sig_stop] [-t timeout] " \
 	    "-p pidfile service command\n");
 	exit(EX_USAGE);
 }

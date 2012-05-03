@@ -35,7 +35,7 @@
 .Op Fl fv
 .Fl p Ar pidfile
 .Op Fl s Ar sig_stop
-.Op Fl T Ar timeout
+.Op Fl t Ar timeout
 .Ar service
 .Ar command
 .Sh DESCRIPTION
@@ -89,7 +89,7 @@ In the absence of any
 .Fl s
 option, termination on any signal will be interpreted as crash and
 the service will be restarted.
-.It Fl T Ar timeout
+.It Fl t Ar timeout
 The timeout to wait for the service PID file as specified with a
 .Fl p
 option.
