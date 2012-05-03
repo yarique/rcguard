@@ -164,7 +164,7 @@ main(int argc, char **argv)
 
 	if (!foreground) {
 		if (verbose)
-			printf("Daemonizing, further messages in syslog\n");
+			printf("Daemonizing; further messages in syslog\n");
 		verbose = 0;	/* no stdio after daemon() */
 		if (daemon(0, 0) == -1)
 			err(EX_OSERR, "Failed to daemonize");
