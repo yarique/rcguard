@@ -58,6 +58,7 @@ int
 main(int argc, char **argv)
 {
 	char *ep;
+	const char *p;
 	int c;
 	pid_t pid;
 
@@ -112,7 +113,11 @@ main(int argc, char **argv)
 
 	openlog("supervise", LOG_CONS | LOG_PID, LOG_DAEMON);
 
-	setproctitle("%s", service_name);
+	/* Get basename for a nicer proctitle */
+	p = strrchr(service_name, '/');
+	if (p == NULL || *(++p) == '\0')
+		p = service_name;
+	setproctitle("%s", p);
 
 	c = watch_pid(pid);
 	if (WIFSIGNALED(c))
