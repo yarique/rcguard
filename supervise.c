@@ -45,10 +45,13 @@
  *   the pidfile if the pid value is 12345.
  *
  * no pidfile or other lock mechanism used here -- relying
- * on the supervised process pidfile checked by rc.d
+ * on the monitored process pidfile checked by rc.d
  *
  *   rc.d won't try to start a service if it's already running.
  */
+
+#define MY_NAME		"supervise"
+#define PIDFILE_SUFFIX	"supervised"
 
 #define PATH_SERVICE	"/usr/sbin/service"
 
@@ -112,7 +115,7 @@ main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
-	/* Can't supervise a service w/o knowing its pidfile */
+	/* Can't monitor a service w/o knowing its pidfile */
 	if (service_pidfile == NULL)
 		usage();
 
@@ -138,13 +141,13 @@ main(int argc, char **argv)
 		printf("Timeout: %ld\n", pidfile_timeout);
 	}
 
-	asprintf(&mypidfile, "%s.supervised", service_pidfile);
+	asprintf(&mypidfile, "%s.%s", service_pidfile, PIDFILE_SUFFIX);
 	if (mypidfile == NULL)
 		errx(EX_UNAVAILABLE, "out of memory in asprintf");
 	if ((pfh = pidfile_open(mypidfile, 0644, &pid)) == NULL) {
 		if (errno == EEXIST)
 			errx(EX_UNAVAILABLE,
-			    "already supervising %s with pid %ld",
+			    "already monitoring %s with pid %ld",
 			    shortname, (long)pid);
 		else
 			err(EX_CANTCREAT, "failed to create own pidfile %s",
@@ -170,7 +173,7 @@ main(int argc, char **argv)
 			err(EX_OSERR, "Failed to daemonize");
 	}
 
-	openlog("supervise", LOG_CONS | LOG_PID, LOG_DAEMON);
+	openlog(MY_NAME, LOG_CONS | LOG_PID, LOG_DAEMON);
 
 	/* Now that we've daemonized, rewrite our pidfile with the new pid. */
 	if (pidfile_write(pfh) == -1)
@@ -349,8 +352,8 @@ void
 usage(void)
 {
 	fprintf(stderr,
-	    "Usage: supervise [-fv] [-s sig_stop] [-t timeout] " \
-	    "-p pidfile service command\n");
+	    "Usage: %s [-fv] [-s sig_stop] [-t timeout] " \
+	    "-p pidfile service command\n", MY_NAME);
 	exit(EX_USAGE);
 }
 
