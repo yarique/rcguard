@@ -84,6 +84,7 @@ main(int argc, char **argv)
 			if ((sig_stop = str2sig(optarg)) == -1)
 				errx(EX_USAGE,
 				    "invalid signal name %s", optarg);
+			break;
 		case 'T':
 			pidfile_timeout = strtol(optarg, &ep, 10);
 			if (pidfile_timeout <= 0 || *ep != '\0')
