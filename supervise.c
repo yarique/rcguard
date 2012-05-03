@@ -151,6 +151,15 @@ main(int argc, char **argv)
 			    mypidfile);
 	}
 
+	/*
+	 * It's OK to (re)write pidfile more than once, so do it here
+	 * before a possibly long wait for the service pidfile
+	 * to make our pid known for troubleshooting.
+	 */
+	if (pidfile_write(pfh) == -1)
+		errx(EX_UNAVAILABLE, "failed to write to own pidfile %s",
+		    mypidfile);
+
 	pid = get_pid_from_file(service_pidfile, pidfile_timeout);
 
 	if (!foreground) {
@@ -161,6 +170,7 @@ main(int argc, char **argv)
 
 	openlog("supervise", LOG_CONS | LOG_PID, LOG_DAEMON);
 
+	/* Now that we've daemonized, rewrite our pidfile with the new pid. */
 	if (pidfile_write(pfh) == -1)
 		syslog(LOG_ERR, "failed to write to own pidfile %s",
 		    mypidfile);
