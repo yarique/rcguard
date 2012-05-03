@@ -154,7 +154,7 @@ main(int argc, char **argv)
 	/*
 	 * It's OK to (re)write pidfile more than once, so do it here
 	 * before a possibly long wait for the service pidfile
-	 * to make our pid known for troubleshooting.
+	 * to make our pid known for troubleshooting purposes.
 	 */
 	if (pidfile_write(pfh) == -1)
 		errx(EX_UNAVAILABLE, "failed to write to own pidfile %s",
