@@ -127,7 +127,7 @@ main(int argc, char **argv)
 
 	c = watch_pid(pid);
 	if (WIFSIGNALED(c)) {
-		syslog(LOG_WARNING, "%s terminated on signal %d",
+		syslog(LOG_NOTICE, "%s terminated on signal %d",
 		    p, WTERMSIG(c));
 		switch (WTERMSIG(c)) {
 		case SIGTERM:
@@ -138,7 +138,7 @@ main(int argc, char **argv)
 			break;
 		}
 	} else if (WIFEXITED(c)) {
-		syslog(LOG_WARNING, "%s exited with status %d",
+		syslog(LOG_NOTICE, "%s exited with status %d",
 		    p, WEXITSTATUS(c));
 		restart = 0;
 	} else {
@@ -148,7 +148,7 @@ main(int argc, char **argv)
 	}
 
 	if (restart) {
-		syslog(LOG_WARNING, "Restarting %s", p);
+		syslog(LOG_NOTICE, "Restarting %s", p);
 		if (verbose)
 			printf("Restarting %s\n", service_name);
 		if (service_name[0] == '/') {
@@ -170,7 +170,7 @@ main(int argc, char **argv)
 			syslog(LOG_ERR, "exec returned %d", c);
 		exit(EX_OSERR);
 	} else
-		syslog(LOG_INFO, "%s stopped", p);
+		syslog(LOG_NOTICE, "%s stopped", p);
 
 	exit(EX_OK);
 
