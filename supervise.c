@@ -125,6 +125,11 @@ main(int argc, char **argv)
 	if (service_command[0] == '\0')
 		errx(EX_USAGE, "null service command");
 
+	/* Get basename for a nicer proctitle and messages */
+	shortname = strrchr(service_name, '/');
+	if (shortname == NULL || *(++shortname) == '\0')
+		shortname = service_name;
+
 	if (verbose) {
 		printf("Service: %s\n", service_name);
 		printf("Command: %s\n", service_command);
@@ -140,7 +145,7 @@ main(int argc, char **argv)
 		if (errno == EEXIST)
 			errx(EX_UNAVAILABLE,
 			    "already supervising %s with pid %ld",
-			    service_name, (long)pid);
+			    shortname, (long)pid);
 		else
 			err(EX_CANTCREAT, "failed to create own pidfile %s",
 			    mypidfile);
@@ -160,10 +165,6 @@ main(int argc, char **argv)
 		syslog(LOG_ERR, "failed to write to own pidfile %s",
 		    mypidfile);
 
-	/* Get basename for a nicer proctitle and messages */
-	shortname = strrchr(service_name, '/');
-	if (shortname == NULL || *(++shortname) == '\0')
-		shortname = service_name;
 	setproctitle("%s", shortname);
 
 	c = watch_pid(pid);
