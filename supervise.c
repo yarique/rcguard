@@ -1,10 +1,11 @@
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/event.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <err.h>
 #include <errno.h>
+#include <libutil.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,10 +66,12 @@ int
 main(int argc, char **argv)
 {
 	char *ep;
+	char *mypidfile;
 	const char *p;
 	int c;
 	int restart;
 	pid_t pid;
+	struct pidfh *pfh;
 
 	while ((c = getopt(argc, argv, "fp:s:T:v")) != -1) {
 		switch (c) {
@@ -119,6 +122,22 @@ main(int argc, char **argv)
 		printf("Signal: %d\n", sig_stop);
 		printf("Timeout: %ld\n", pidfile_timeout);
 	}
+
+	asprintf(&mypidfile, "%s.supervised", service_pidfile);
+	if (mypidfile == NULL)
+		errx(EX_UNAVAILABLE, "out of memory in asprintf");
+	if ((pfh = pidfile_open(mypidfile, 0644, &pid)) == NULL) {
+		if (errno == EEXIST)
+			errx(EX_UNAVAILABLE,
+			    "already supervising %s with pid %ld",
+			    service_name, (long)pid);
+		else
+			err(EX_CANTCREAT, "failed to create own pidfile %s",
+			    mypidfile);
+	}
+	if (pidfile_write(pfh) == -1)
+		errx(EX_UNAVAILABLE, "failed to write to own pidfile %s",
+		    mypidfile);
 
 	pid = get_pid_from_file(service_pidfile, pidfile_timeout);
 
@@ -175,6 +194,7 @@ main(int argc, char **argv)
 	} else
 		syslog(LOG_NOTICE, "%s stopped", p);
 
+	pidfile_remove(pfh);
 	exit(EX_OK);
 
 	return (0);	/* dummy */

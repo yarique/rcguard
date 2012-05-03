@@ -1,5 +1,8 @@
 PROG=	supervise
 
+DPADD=  ${LIBUTIL}
+LDADD=  -lutil
+
 BINDIR?=	/sbin
 
 WARNS?=	100
