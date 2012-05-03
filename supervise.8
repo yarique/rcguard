@@ -125,13 +125,19 @@ currently has to be the name of the
 script rather than that set inside it in the
 .Va name
 variable.
-Specifying
+At the same time, specifying
 .Ar service
-by its
+by the absolute path name of its
 .Pa rc.d
-script full path name is unambiguous and free
-of this caveat.
+script is unambiguous and free of that caveat.
 .It Ar command
+The
+.Pa rc.d
+command to be used to restart the service in case it fails,
+such as
+.Dq Li restart
+or
+.Dq Li onestart .
 .El
 .Sh FILES
 .Bl -tag -width ".Pa /usr/sbin/service" -compact
