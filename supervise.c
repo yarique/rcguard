@@ -301,6 +301,9 @@ get_pid_from_file(const char *pidfile, long timeout)
 			    pidfile, t);
 		break;
 retry:
+		if (slept >= timeout)
+			errx(EX_UNAVAILABLE,
+			    "timeout waiting for pidfile %s", pidfile);
 		/* Exponential backoff */
 		t = slept ? slept : 1;
 		if (verbose)
@@ -309,9 +312,6 @@ retry:
 		slept += t;
 		if (verbose > 1)
 			printf("Slept for %ld seconds so far\n", slept);
-		if (slept >= timeout)
-			errx(EX_UNAVAILABLE,
-			    "timeout waiting for pidfile %s", pidfile);
 		if (verbose)
 			printf("Retrying...\n");
 	}
