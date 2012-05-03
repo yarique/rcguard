@@ -53,7 +53,7 @@ int foreground = 0;
 long pidfile_timeout = 60;	/* seconds */
 const char *service_name;
 const char *service_pidfile = NULL;
-int sig_stop = SIGTERM;		/* default needs to be in sync with rc.subr */
+int sig_stop = -1;		/* no signal means clean exit by default */
 int verbose = 0;
 
 pid_t get_pid_from_file(const char *, long);
