@@ -135,9 +135,6 @@ main(int argc, char **argv)
 			err(EX_CANTCREAT, "failed to create own pidfile %s",
 			    mypidfile);
 	}
-	if (pidfile_write(pfh) == -1)
-		errx(EX_UNAVAILABLE, "failed to write to own pidfile %s",
-		    mypidfile);
 
 	pid = get_pid_from_file(service_pidfile, pidfile_timeout);
 
@@ -147,6 +144,10 @@ main(int argc, char **argv)
 	}
 
 	openlog("supervise", LOG_CONS | LOG_PID, LOG_DAEMON);
+
+	if (pidfile_write(pfh) == -1)
+		syslog(LOG_ERR, "failed to write to own pidfile %s",
+		    mypidfile);
 
 	/* Get basename for a nicer proctitle */
 	p = strrchr(service_name, '/');
