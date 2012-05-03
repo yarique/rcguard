@@ -81,6 +81,8 @@ main(int argc, char **argv)
 				errx(EX_USAGE, "null pidfile name");
 			break;
 		case 's':
+			if (optarg[0] == '\0')
+				errx(EX_USAGE, "null signal name");
 			if ((sig_stop = str2sig(optarg)) == -1)
 				errx(EX_USAGE,
 				    "invalid signal name %s", optarg);
@@ -256,6 +258,8 @@ str2sig(const char *s)
 {
 	int i;
 
+	if (strncmp(s, "SIG", 3) == 0 && strlen(s) > 3)
+		s += 3;
 	for (i = 1; i < NSIG; i++) {
 		if (strcmp(s, sys_signame[i]) == 0)
 			return (i);
