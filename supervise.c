@@ -256,7 +256,7 @@ str2sig(const char *s)
 {
 	int i;
 
-	for (i = 0; i < NSIG; i++) {
+	for (i = 1; i < NSIG; i++) {
 		if (strcmp(s, sys_signame[i]) == 0)
 			return (i);
 	}
