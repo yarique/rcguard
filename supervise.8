@@ -29,7 +29,7 @@
 .Os
 .Sh NAME
 .Nm supervise
-.Nd "supervise an rc.d service"
+.Nd "supervise an rc.d service process"
 .Sh SYNOPSIS
 .Nm
 .Op Fl fv
@@ -43,7 +43,7 @@ The
 .Nm
 auxiliary daemon can monitor an individual
 .Pa rc.d
-service such as a daemon and restart it, should it crash.
+service process such as a daemon and restart it, should it crash.
 The
 .Nm
 daemon is not to be started by the user:
@@ -67,10 +67,10 @@ Useful in combination with a
 .Fl v
 option.
 .It Fl p Ar pidfile
-The PID file of the service to monitor.
+The PID file of the process to monitor.
 This is a mandatory option because
 .Nm
-needs to learn the PID of the watched service.
+needs to learn the PID of the watched process.
 Own PID file name of the
 .Nm
 instance is formed by appending a
@@ -78,13 +78,13 @@ instance is formed by appending a
 suffix to
 .Ar pidfile .
 .It Fl s Ar sig_stop
-The signal used to shut the supervised service down,
+The signal used to shut the supervised process down,
 corresponding to the
 .Va sig_stop
 variable set by the
 .Pa rc.d
 script.
-If the service terminates on this signal, it will not be restarted.
+If the process terminates on this signal, it will not be restarted.
 In the absence of any
 .Fl s
 option, termination on any signal will be interpreted as crash and
@@ -144,6 +144,14 @@ such as
 or
 .Dq Li onestart .
 .El
+.Pp
+By default, if the monitored process terminated on a signal,
+it is assumed to have crashed and will be restarted, but if
+it exited, it is assumed to have shut down cleanly and will
+not be restarted.
+This behavior can be adjusted with a
+.Fl s
+option to specify a single signal that also means a clean shutdown.
 .Sh SEE ALSO
 .Xr rc.conf 5 ,
 .Xr rc 8 ,
