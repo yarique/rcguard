@@ -53,10 +53,12 @@ int foreground = 0;
 long pidfile_timeout = 60;	/* seconds */
 const char *service_name;
 const char *service_pidfile = NULL;
+int sig_stop = SIGTERM;		/* default needs to be in sync with rc.subr */
 int verbose = 0;
 
 pid_t get_pid_from_file(const char *, long);
 void usage(void);
+int str2sig(const char *);
 int watch_pid(pid_t);
 
 int
@@ -68,7 +70,7 @@ main(int argc, char **argv)
 	int restart;
 	pid_t pid;
 
-	while ((c = getopt(argc, argv, "fp:T:v")) != -1) {
+	while ((c = getopt(argc, argv, "fp:s:T:v")) != -1) {
 		switch (c) {
 		case 'f':
 			foreground = 1;
@@ -78,6 +80,10 @@ main(int argc, char **argv)
 			if (service_pidfile[0] == '\0')
 				errx(EX_USAGE, "null pidfile name");
 			break;
+		case 's':
+			if ((sig_stop = str2sig(optarg)) == -1)
+				errx(EX_USAGE,
+				    "invalid signal name %s", optarg);
 		case 'T':
 			pidfile_timeout = strtol(optarg, &ep, 10);
 			if (pidfile_timeout <= 0 || *ep != '\0')
@@ -250,11 +256,25 @@ retry:
 	return (pid);
 }
 
+int
+str2sig(const char *s)
+{
+	int i;
+
+	for (i = 0; i < NSIG; i++) {
+		if (strcmp(s, sys_signame[i]))
+			return (i);
+	}
+
+	return (-1);
+}
+
 void
 usage(void)
 {
 	fprintf(stderr,
-	    "Usage: supervise [-fv] [-T timeout] -p pidfile service\n");
+	    "Usage: supervise [-fv] [-s sig_stop] [-T timeout] " \
+	    "-p pidfile service\n");
 	exit(EX_USAGE);
 }
 
