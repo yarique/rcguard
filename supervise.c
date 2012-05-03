@@ -140,7 +140,8 @@ main(int argc, char **argv)
 
 	if (!foreground) {
 		verbose = 0;	/* no stdio */
-		daemon(0, 0);
+		if (daemon(0, 0) == -1)
+			err(EX_OSERR, "Failed to daemonize");
 	}
 
 	openlog("supervise", LOG_CONS | LOG_PID, LOG_DAEMON);
