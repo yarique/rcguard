@@ -72,7 +72,7 @@ main(int argc, char **argv)
 {
 	char *ep;
 	char *mypidfile;
-	const char *p;
+	const char *shortname;
 	int c;
 	int restart;
 	pid_t pid;
@@ -160,29 +160,29 @@ main(int argc, char **argv)
 		syslog(LOG_ERR, "failed to write to own pidfile %s",
 		    mypidfile);
 
-	/* Get basename for a nicer proctitle */
-	p = strrchr(service_name, '/');
-	if (p == NULL || *(++p) == '\0')
-		p = service_name;
-	setproctitle("%s", p);
+	/* Get basename for a nicer proctitle and messages */
+	shortname = strrchr(service_name, '/');
+	if (shortname == NULL || *(++shortname) == '\0')
+		shortname = service_name;
+	setproctitle("%s", shortname);
 
 	c = watch_pid(pid);
 	if (WIFSIGNALED(c)) {
 		syslog(LOG_NOTICE, "%s terminated on signal %d",
-		    p, WTERMSIG(c));
+		    shortname, WTERMSIG(c));
 		restart = WTERMSIG(c) != sig_stop;
 	} else if (WIFEXITED(c)) {
 		syslog(LOG_NOTICE, "%s exited with status %d",
-		    p, WEXITSTATUS(c));
+		    shortname, WEXITSTATUS(c));
 		restart = 0;
 	} else {
 		syslog(LOG_WARNING, "%s ceased with unknown status %d",
-		    p, c);
+		    shortname, c);
 		restart = 1;
 	}
 
 	if (restart) {
-		syslog(LOG_NOTICE, "Restarting %s", p);
+		syslog(LOG_NOTICE, "Restarting %s", shortname);
 		if (verbose)
 			printf("Restarting %s\n", service_name);
 		if (service_name[0] == '/') {
@@ -205,7 +205,7 @@ main(int argc, char **argv)
 			syslog(LOG_ERR, "exec returned %d", c);
 		exit(EX_OSERR);
 	} else
-		syslog(LOG_NOTICE, "%s stopped", p);
+		syslog(LOG_NOTICE, "%s stopped", shortname);
 
 	exit(EX_OK);
 
