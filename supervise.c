@@ -324,10 +324,19 @@ retry:
 int
 str2sig(const char *s)
 {
+	char *ep;
 	int i;
 
+	/* First, check if it's numeric */
+	i = (int)strtol(s, &ep, 10);
+	if (i > 0 && *ep == '\0')
+		return (i);
+
+	/* Drop SIG prefix if present */
 	if (strncmp(s, "SIG", 3) == 0 && strlen(s) > 3)
 		s += 3;
+
+	/* Search the table of signal names */
 	for (i = 1; i < NSIG; i++) {
 		if (strcmp(s, sys_signame[i]) == 0)
 			return (i);
