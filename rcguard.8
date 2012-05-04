@@ -170,3 +170,9 @@ manual page first appeared in
 This
 manual page was written by
 .An Yar Tikhiy Aq yar@FreeBSD.org .
+.Sh BUGS
+When the service monitored undergoes a conventional restart,
+there is a small chance that the earlier
+.Nm
+instance will close its PID file after the new instance tries
+to open it and the new instance will fail to start.
