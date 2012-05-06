@@ -336,12 +336,12 @@ str2sig(const char *s)
 		return (i);
 
 	/* Drop SIG prefix if present */
-	if (strncmp(s, "SIG", 3) == 0 && strlen(s) > 3)
+	if (strncasecmp(s, "SIG", 3) == 0 && strlen(s) > 3)
 		s += 3;
 
 	/* Search the table of signal names */
 	for (i = 1; i < NSIG; i++) {
-		if (strcmp(s, sys_signame[i]) == 0)
+		if (strcasecmp(s, sys_signame[i]) == 0)
 			return (i);
 	}
 
