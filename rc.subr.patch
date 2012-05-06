@@ -1,0 +1,49 @@
+diff --git a/rc.subr b/rc.subr
+index becfcc5..963cf79 100644
+--- a/rc.subr
++++ b/rc.subr
+@@ -787,6 +787,14 @@ $command $rc_flags $command_args"
+ 				return 1
+ 			fi
+ 
++			eval _guard=\$${name}_guard
++			if [ -n "$pidfile" ] && [ -n "$_guard" ] && \
++			    checkyesno _guard; then
++				/libexec/rcguard \
++				    -p "$pidfile" -s "${sig_stop:-TERM}" \
++				    "${rc_script:-$0}" onerestart
++			fi
++
+ 					# finally, run postcmd
+ 					#
+ 			_run_rc_postcmd
+@@ -801,6 +809,12 @@ $command $rc_flags $command_args"
+ 
+ 			_run_rc_precmd || return 1
+ 
++			if [ -n "$pidfile" -a -f "${pidfile}.rcguard" ]; then
++				_rcguard_pid=$(check_pidfile "${pidfile}.rcguard" rcguard)
++			else
++				_rcguard_pid=''
++			fi
++
+ 					# send the signal to stop
+ 					#
+ 			echo "Stopping ${name}."
+@@ -809,7 +823,7 @@ $command $rc_flags $command_args"
+ 
+ 					# wait for the command to exit,
+ 					# and run postcmd.
+-			wait_for_pids $rc_pid
++			wait_for_pids $rc_pid $_rcguard_pid
+ 
+ 			_run_rc_postcmd
+ 			;;
+@@ -1024,6 +1038,7 @@ run_rc_script()
+ 		;;
+ 	*)				# run in subshell
+ 		if [ -x $_file ]; then
++			rc_script=$_file
+ 			if [ -n "$rc_fast_and_loose" ]; then
+ 				set $_arg; . $_file
+ 			else
